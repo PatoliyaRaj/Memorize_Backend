@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { getDatabase } from '@/db';
-import { users, type User, type NewUser } from '@/model/types';
+import { users, type User, type NewUser } from '@/db/schemas';
 
 /**
  * User Repository
@@ -8,6 +9,12 @@ import { users, type User, type NewUser } from '@/model/types';
  */
 
 export class UserRepository {
+  private static readonly uuidSchema = z.string().uuid();
+
+  private static isUuid(id: string): boolean {
+    return this.uuidSchema.safeParse(id).success;
+  }
+
   /**
    * Create a new user
    */
@@ -21,6 +28,10 @@ export class UserRepository {
    * Find user by ID
    */
   static async findById(id: string): Promise<User | undefined> {
+    if (!this.isUuid(id)) {
+      return undefined;
+    }
+
     const db = await getDatabase();
     const result = await db.select().from(users).where(eq(users.id, id));
     return result[0];
@@ -47,10 +58,14 @@ export class UserRepository {
    * Update user
    */
   static async update(id: string, data: Partial<NewUser>): Promise<User | undefined> {
+    if (!this.isUuid(id)) {
+      return undefined;
+    }
+
     const db = await getDatabase();
     const result = await db
       .update(users)
-      .set({ ...data, updateTimestamp: new Date() })
+      .set({ ...data, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return result[0];
@@ -60,6 +75,10 @@ export class UserRepository {
    * Delete user
    */
   static async delete(id: string): Promise<boolean> {
+    if (!this.isUuid(id)) {
+      return false;
+    }
+
     const db = await getDatabase();
     const result = await db.delete(users).where(eq(users.id, id));
     return !!result;

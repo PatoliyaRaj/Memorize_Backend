@@ -1,25 +1,20 @@
-import { pgTable, uuid, varchar, integer, boolean, uniqueIndex } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { pgTable, uuid, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { auditColumns } from './shared';
-
 
 export const users = pgTable(
   'users',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    firstName: varchar('firstName', { length: 255 }).notNull(),
-    lastName: varchar('lastName', { length: 255 }).notNull(),
-    age: integer('age').notNull(),
-    email: varchar('email', { length: 255 }).notNull().unique(),
-    isActive: boolean('isActive').default(false).notNull(),
+    email: text('email').notNull().unique(),
+    displayName: text('display_name'),
+    avatarUrl: text('avatar_url'),
+    passwordHash: text('password_hash'),
     ...auditColumns,
   },
   (table) => ({
-    emailIdx: uniqueIndex('email_idx').on(table.email),
+    emailIdx: uniqueIndex('users_email_idx').on(table.email),
   })
 );
-
-export const usersRelations = relations(users, () => ({}));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

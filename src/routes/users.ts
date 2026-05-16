@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { UserController } from '@/controllers/UserController';
 import { validateBody } from '@/middlewares/validate';
 import { createUserSchema, updateUserSchema } from '@/validators/user';
+import { authMiddleware } from '@/middlewares/auth';
 
 /**
  * User Routes
@@ -29,6 +30,7 @@ router.get('/:id', (req: Request, res: Response) => {
 /**
  * POST /api/users
  * Create new user (validated)
+ * Note: For production, consider using /api/auth/signup instead
  */
 router.post('/', validateBody(createUserSchema), (req: Request, res: Response) => {
   return UserController.createUser(req, res);
@@ -36,17 +38,19 @@ router.post('/', validateBody(createUserSchema), (req: Request, res: Response) =
 
 /**
  * PATCH /api/users/:id
- * Update user
+ * Update user (requires authentication)
+ * Users can only update their own profile
  */
-router.patch('/:id', validateBody(updateUserSchema), (req: Request, res: Response) => {
+router.patch('/:id', authMiddleware, validateBody(updateUserSchema), (req: Request, res: Response) => {
   return UserController.updateUser(req, res);
 });
 
 /**
  * DELETE /api/users/:id
- * Delete user
+ * Delete user (requires authentication)
+ * Users can only delete their own account
  */
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete('/:id', authMiddleware, (req: Request, res: Response) => {
   return UserController.deleteUser(req, res);
 });
 

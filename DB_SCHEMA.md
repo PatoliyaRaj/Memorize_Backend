@@ -24,6 +24,7 @@ How to use (quick)
 Migration notes
 - The project currently contains Sequelize models under `src/model/`.
 - I did not remove or change Sequelize models to avoid breaking runtime behavior; instead I added Drizzle schema files so you can gradually migrate logic to Drizzle (queries, repositories, migrations).
+- The repo does not currently include generated Drizzle migration files under `drizzle/`, so the tables will not appear in Supabase until you generate and apply the initial migration against the Supabase connection.
 
 Suggested next steps
 - Replace repository-level raw queries or Sequelize usage with Drizzle queries referencing `users`/`nodes`.

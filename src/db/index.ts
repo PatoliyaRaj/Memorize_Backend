@@ -1,89 +1,38 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import * as schema from './schema';
-
-let dbInstance: ReturnType<typeof drizzle> | null = null;
-let pool: Pool | null = null;
-
 /**
- * Initialize database connection and Drizzle ORM instance
+ * Public DB module surface.
+ *
+ * Import from here everywhere in the app — never import directly from
+ * connection.ts or config.ts to keep the API surface clean.
+ *
+ * Usage in route handlers / services:
+ *   import { getDb } from '@/db';
+ *   const db = getDb(); // sync, safe after server startup
+ *
+ * Usage in server.ts startup:
+ *   import { initializeDatabase, closeDatabase } from '@/db';
  */
-export const initializeDatabase = async (): Promise<ReturnType<typeof drizzle>> => {
-  if (dbInstance) {
-    return dbInstance;
-  }
 
-  if (!process.env.POSTGRES_URL) {
-    throw new Error('POSTGRES_URL environment variable is not defined');
-  }
+export {
+  initializeDatabase,
+  getDatabase,
+  getDb,           // ← synchronous getter for use after startup
+  closeDatabase,
+  verifyDatabaseReady,
+  type DrizzleDB,
+} from './connection';
 
-  try {
-    // Create connection pool
-    pool = new Pool({
-      connectionString: process.env.POSTGRES_URL,
-      max: 20,
-      min: 0,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
+export {
+  getDatabaseStrategy,
+  getDatabaseCandidates,
+  resolveDatabaseConnectionString,
+  getResolvedDatabaseTarget,
+  getPoolSettings,
+  type DatabaseStrategy,
+  type DatabaseCandidate,
+} from './config';
 
-    pool.on('error', (err) => {
-      console.error('Unexpected error on idle client', err);
-    });
+// Re-export the entire schema namespace for Drizzle queries
+export * as schema from './schema';
 
-    // Test connection
-    const client = await pool.connect();
-    console.log('✅ Database connection established');
-    client.release();
-
-    // Initialize Drizzle instance
-    dbInstance = drizzle(pool, { schema });
-    console.log('✅ Drizzle ORM initialized');
-
-    return dbInstance;
-  } catch (error) {
-    console.error('❌ Database initialization failed:', error);
-    throw error;
-  }
-};
-
-/**
- * Get the Drizzle database instance
- * Initializes if not already done
- */
-export const getDatabase = async (): Promise<ReturnType<typeof drizzle>> => {
-  if (!dbInstance) {
-    return await initializeDatabase();
-  }
-  return dbInstance;
-};
-
-/**
- * Close database connection
- */
-export const closeDatabase = async (): Promise<void> => {
-  if (pool) {
-    await pool.end();
-    console.log('✅ Database connection closed');
-  }
-  dbInstance = null;
-};
-
-/**
- * Verify database is ready
- */
-export const verifyDatabaseReady = async (): Promise<boolean> => {
-  try {
-    if (!pool) {
-      return false;
-    }
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    client.release();
-    return !!result.rows[0];
-  } catch {
-    return false;
-  }
-};
-
-export { schema };
+// Re-export individual table objects and types for convenience
+export * from './schemas';
