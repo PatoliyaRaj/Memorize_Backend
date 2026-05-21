@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, uniqueIndex, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, index, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 import { playlists } from './playlists';
@@ -31,8 +31,8 @@ export const nodes = pgTable(
     ...auditColumns,
   },
   (table) => ({
-    playlistIdx: uniqueIndex('nodes_playlist_user_idx').on(table.playlistId, table.userId),
-    masteryIdx: uniqueIndex('nodes_mastery_idx').on(table.userId, table.masteryLevel),
+    playlistIdx: index('nodes_playlist_user_idx').on(table.playlistId, table.userId),
+    masteryIdx: index('nodes_mastery_idx').on(table.userId, table.masteryLevel),
     masteryCheck: check(
       'nodes_mastery_check',
       sql`mastery_level IN ('unseen','weak','learning','strong','mastered')`

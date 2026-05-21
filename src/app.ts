@@ -9,6 +9,8 @@ import userRoutes from './routes/users';
 import authRoutes from './routes/auth';
 import curriculumRoutes from './routes/curriculum';
 import uploadRoutes from './routes/upload';
+import edgeRoutes from './routes/edges';
+import studyRoutes from './routes/study';
 import logger from './utils/logger';
 
 const app = express();
@@ -92,6 +94,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/curriculum', curriculumRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api', edgeRoutes);
+app.use('/api', studyRoutes);
 
 // Root welcome (only for GET /)
 app.get('/', (_req: Request, res: Response) => {

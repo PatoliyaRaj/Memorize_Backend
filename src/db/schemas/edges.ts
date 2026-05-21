@@ -26,6 +26,8 @@ export const edges = pgTable('edges', {
   label: text('label'),
   strength: integer('strength').default(100).notNull(),
   isCrossPlaylist: boolean('is_cross_playlist').default(false).notNull(),
+  sourceHandle: text('source_handle'),
+  targetHandle: text('target_handle'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

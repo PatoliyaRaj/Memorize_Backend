@@ -48,23 +48,27 @@ export const updateNodeSchema = createNodeSchema.partial();
 
 export const updateNodeDetailsSchema = z.object({
   theoryContent: z.string().optional(),
+  theory: z.string().optional(),
   references: z.array(z.object({
     title: z.string(),
-    url: z.string().url(),
+    url: z.string(),
     type: z.enum(['video', 'article', 'doc', 'book'])
   })).optional(),
   images: z.array(z.object({
-    url: z.string().url(),
+    url: z.string(),
     caption: z.string().optional(),
     altText: z.string().optional()
   })).optional(),
   files: z.array(z.object({
-    url: z.string().url(),
+    url: z.string(),
     name: z.string(),
     size: z.number().optional()
   })).optional(),
   thingsToRemember: z.string().optional(),
+  takeaways: z.array(z.string()).optional(),
   emotionalAnchor: z.string().optional(),
+  emotional_anchor: z.string().optional(),
   isImportant: z.boolean().optional(),
   examRelevance: z.array(z.string()).optional(),
 });
+
