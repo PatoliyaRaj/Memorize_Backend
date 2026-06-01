@@ -4,4 +4,4 @@
  */
 
 export type { User, NewUser, Node, NewNode, Basket, NewBasket, Subject, NewSubject , Playlist , NewPlaylist  , NodeDetail  } from '../db/schema';
-export { users, nodes, baskets, subjects } from '../db/schema';
+export { users, nodes, baskets, subjects , playlists , nodeDetails  } from '../db/schema';

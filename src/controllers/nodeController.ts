@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { NodeService } from '@/services/nodeService';
 import { createNodeSchema, updateNodeSchema, updateNodeDetailsSchema } from '@/validators/curriculum';
 import logger from '@/utils/logger';
 import { getDb } from '@/db';
 import { cards, cardStates } from '@/db/schemas';
 import { eq, and, or, isNull, lte, sql } from 'drizzle-orm';
+
 
 export class NodeController {
   static async createNode(req: Request, res: Response) {
@@ -57,6 +59,25 @@ export class NodeController {
       const node = await NodeService.updateNode(userId, id, data);
       res.status(200).json({ success: true, data: node });
     } catch (error: any) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  static async updateNodePosition(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      const { id } = req.params;
+
+      const positionSchema = z.object({
+        posX: z.number().int(),
+        posY: z.number().int(),
+      });
+
+      const { posX, posY } = positionSchema.parse(req.body);
+      const node = await NodeService.updateNodePosition(userId, id, posX, posY);
+      res.status(200).json({ success: true, data: node });
+    } catch (error: any) {
+      logger.error('Failed to update node position', { error: error.message, nodeId: req.params.id });
       res.status(400).json({ success: false, error: error.message });
     }
   }

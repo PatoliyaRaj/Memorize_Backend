@@ -11,6 +11,7 @@ import curriculumRoutes from './routes/curriculum';
 import uploadRoutes from './routes/upload';
 import edgeRoutes from './routes/edges';
 import studyRoutes from './routes/study';
+import pulseRoutes from './routes/pulse';
 import logger from './utils/logger';
 
 const app = express();
@@ -96,6 +97,7 @@ app.use('/api/curriculum', curriculumRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api', edgeRoutes);
 app.use('/api', studyRoutes);
+app.use('/api', pulseRoutes);
 
 // Root welcome (only for GET /)
 app.get('/', (_req: Request, res: Response) => {

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, timestamp } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { nodes } from './nodes';
 import { auditColumns } from './shared';
@@ -25,6 +25,7 @@ export const cards = pgTable('cards', {
   }).default('none'),
   orderIndex: integer('order_index').default(0).notNull(),
   sourcePage: integer('source_page'),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   ...auditColumns,
 });
 

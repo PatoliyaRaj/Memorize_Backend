@@ -8,6 +8,11 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/nodes/:nodeId/cards', StudyController.getCardsForNode);
+router.post('/nodes/:nodeId/cards', StudyController.createCard);
 router.post('/study/review', StudyController.postReview);
+router.post('/study/session', StudyController.startSession);
+router.patch('/study/session/:sessionId/end', StudyController.endSession);
+router.patch('/cards/:cardId', StudyController.updateCard);
+router.delete('/cards/:cardId', StudyController.deleteCard);
 
 export default router;

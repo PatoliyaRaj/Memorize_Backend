@@ -49,6 +49,16 @@ export class NodeService {
     return result[0];
   }
 
+  static async updateNodePosition(userId: string, id: string, posX: number, posY: number): Promise<Node> {
+    const db = getDb();
+    const result = await db.update(nodes)
+      .set({ posX, posY, updatedAt: new Date() })
+      .where(and(eq(nodes.id, id), eq(nodes.userId, userId)))
+      .returning();
+    if (!result.length) throw new Error('Node not found or unauthorized');
+    return result[0];
+  }
+
   static async deleteNode(userId: string, id: string): Promise<void> {
     const db = getDb();
     const result = await db.delete(nodes)

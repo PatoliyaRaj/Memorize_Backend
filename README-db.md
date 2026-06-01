@@ -30,8 +30,11 @@ Migration example
 
 Supabase RLS
 - Store RLS policy SQL in `supabase/rls-policies.sql`.
-- Apply policy changes manually so they are reviewed before production.
-- If a policy needs ownership checks, add the matching ownership column to the table first.
+- Apply policy changes with `npm run db:rls` or review the SQL manually in the Supabase editor.
+- Use `npm run db:sync` when you want the preflight cleanup, Drizzle schema push, and RLS policies applied together.
+- Keep `public.users` backend-only because it contains `passwordHash`.
+- Use `user_id = auth.uid()` ownership policies for user-owned tables such as `nodes`, `playlists`, `subjects`, and `user_profiles`.
+- The local PostgreSQL `auth.uid()` compatibility shim lives in `src/scripts/apply-rls.ts` so the shared SQL file stays valid in Supabase.
 
 Further reading
 - Postgres pooling and PgBouncer best practices

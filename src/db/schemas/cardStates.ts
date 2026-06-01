@@ -17,6 +17,7 @@ export const cardStates = pgTable('card_states', {
   scheduledDays: integer('scheduled_days').default(0).notNull(),
   reps: integer('reps').default(0).notNull(),
   lapses: integer('lapses').default(0).notNull(),
+  learningSteps: integer('learning_steps').default(0).notNull(),
   state: text('state', {
     enum: ['New', 'Learning', 'Review', 'Relearning'],
   })

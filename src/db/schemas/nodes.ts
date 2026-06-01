@@ -1,5 +1,4 @@
-import { pgTable, uuid, text, integer, index, check } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { pgTable, uuid, text, integer, index } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { playlists } from './playlists';
 import { auditColumns } from './shared';
@@ -33,10 +32,6 @@ export const nodes = pgTable(
   (table) => ({
     playlistIdx: index('nodes_playlist_user_idx').on(table.playlistId, table.userId),
     masteryIdx: index('nodes_mastery_idx').on(table.userId, table.masteryLevel),
-    masteryCheck: check(
-      'nodes_mastery_check',
-      sql`mastery_level IN ('unseen','weak','learning','strong','mastered')`
-    ),
   })
 );
 

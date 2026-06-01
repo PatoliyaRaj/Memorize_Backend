@@ -36,6 +36,7 @@ router.post('/nodes', NodeController.createNode);
 router.get('/nodes', NodeController.getNodes); // uses ?playlistId=...
 router.get('/nodes/:id', NodeController.getNodeById);
 router.put('/nodes/:id', NodeController.updateNode);
+router.patch('/nodes/:id/position', NodeController.updateNodePosition); // Dedicated drag-position endpoint
 router.delete('/nodes/:id', NodeController.deleteNode);
 
 // --- Node Details ---

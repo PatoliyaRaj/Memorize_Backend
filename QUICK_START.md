@@ -87,6 +87,9 @@ npm start
 # Generate database migration from schema
 npm run db:migrate
 
+# Apply the current Drizzle schema plus RLS policies
+npm run db:sync
+
 # Open Drizzle Studio (interactive database UI)
 npm run db:studio
 
