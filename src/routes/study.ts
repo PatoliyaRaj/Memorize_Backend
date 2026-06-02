@@ -8,6 +8,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/nodes/:nodeId/cards', StudyController.getCardsForNode);
+router.get('/study/due-cards', StudyController.getDueCards);
 router.post('/nodes/:nodeId/cards', StudyController.createCard);
 router.post('/study/review', StudyController.postReview);
 router.post('/study/session', StudyController.startSession);

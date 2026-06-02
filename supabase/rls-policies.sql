@@ -26,6 +26,9 @@ alter table if exists public.reviews enable row level security;
 alter table if exists public.sleep_logs enable row level security;
 alter table if exists public.study_sessions enable row level security;
 alter table if exists public.pulse_queues enable row level security;
+alter table if exists public.notifications enable row level security;
+alter table if exists public.sleep_alerts enable row level security;
+alter table if exists public.push_subscriptions enable row level security;
 
 -- Keep the users table private. It stores password hashes, so it should not be
 -- readable by direct authenticated client access.
@@ -455,6 +458,105 @@ with check (user_id = auth.uid());
 
 create policy "pulse_queues_delete_owner"
 on public.pulse_queues
+for delete
+to authenticated
+using (user_id = auth.uid());
+
+-- -----------------------------------------------------------------------------
+-- notifications policies
+-- -----------------------------------------------------------------------------
+drop policy if exists "notifications_select_owner" on public.notifications;
+drop policy if exists "notifications_insert_owner" on public.notifications;
+drop policy if exists "notifications_update_owner" on public.notifications;
+drop policy if exists "notifications_delete_owner" on public.notifications;
+
+create policy "notifications_select_owner"
+on public.notifications
+for select
+to authenticated
+using (user_id = auth.uid());
+
+create policy "notifications_insert_owner"
+on public.notifications
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+create policy "notifications_update_owner"
+on public.notifications
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+create policy "notifications_delete_owner"
+on public.notifications
+for delete
+to authenticated
+using (user_id = auth.uid());
+
+-- -----------------------------------------------------------------------------
+-- sleep_alerts policies
+-- -----------------------------------------------------------------------------
+drop policy if exists "sleep_alerts_select_owner" on public.sleep_alerts;
+drop policy if exists "sleep_alerts_insert_owner" on public.sleep_alerts;
+drop policy if exists "sleep_alerts_update_owner" on public.sleep_alerts;
+drop policy if exists "sleep_alerts_delete_owner" on public.sleep_alerts;
+
+create policy "sleep_alerts_select_owner"
+on public.sleep_alerts
+for select
+to authenticated
+using (user_id = auth.uid());
+
+create policy "sleep_alerts_insert_owner"
+on public.sleep_alerts
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+create policy "sleep_alerts_update_owner"
+on public.sleep_alerts
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+create policy "sleep_alerts_delete_owner"
+on public.sleep_alerts
+for delete
+to authenticated
+using (user_id = auth.uid());
+
+-- -----------------------------------------------------------------------------
+-- push_subscriptions policies
+-- -----------------------------------------------------------------------------
+drop policy if exists "push_subscriptions_select_owner" on public.push_subscriptions;
+drop policy if exists "push_subscriptions_insert_owner" on public.push_subscriptions;
+drop policy if exists "push_subscriptions_update_owner" on public.push_subscriptions;
+drop policy if exists "push_subscriptions_delete_owner" on public.push_subscriptions;
+
+create policy "push_subscriptions_select_owner"
+on public.push_subscriptions
+for select
+to authenticated
+using (user_id = auth.uid());
+
+create policy "push_subscriptions_insert_owner"
+on public.push_subscriptions
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+create policy "push_subscriptions_update_owner"
+on public.push_subscriptions
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+create policy "push_subscriptions_delete_owner"
+on public.push_subscriptions
 for delete
 to authenticated
 using (user_id = auth.uid());

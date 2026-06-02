@@ -49,6 +49,19 @@ export class StudyController {
     }
   }
 
+  static async getDueCards(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      const basketId = req.query.basketId as string | undefined;
+
+      const dueCards = await StudyService.getDueCards(userId, basketId);
+      res.status(200).json(dueCards);
+    } catch (error: any) {
+      logger.error('Failed to get due cards', { error: error.message });
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
   static async updateCard(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;

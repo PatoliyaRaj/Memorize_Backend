@@ -1,5 +1,5 @@
 import { getDb } from '@/db';
-import { cards, cardStates, reviews, nodes, nodeDetails, studySessions, userProfiles } from '@/db/schemas';
+import { cards, cardStates, reviews, nodes, nodeDetails, studySessions, userProfiles, playlists, subjects } from '@/db/schemas';
 import { processFsrsReview } from '@/lib/fsrs/engine';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 
@@ -302,6 +302,80 @@ export class StudyService {
         await db.delete(cards).where(eq(cards.id, cardId));
       }
     return { success: true, cardId };
+  }
+
+  /**
+   * Fetch FSRS-due cards for a user, with optional basket-level filtering.
+   */
+  static async getDueCards(userId: string, basketId?: string) {
+    const db = getDb();
+    const now = new Date();
+
+    const query = db
+      .select({
+        card: {
+          id: cards.id,
+          nodeId: cards.nodeId,
+          userId: cards.userId,
+          question: cards.question,
+          answer: cards.answer,
+          explanation: cards.explanation,
+          questionType: cards.questionType,
+          orderIndex: cards.orderIndex,
+        },
+        cardState: {
+          id: cardStates.id,
+          stability: cardStates.stability,
+          difficulty: cardStates.difficulty,
+          state: cardStates.state,
+          nextReview: cardStates.nextReview,
+          masteryLevel: cardStates.masteryLevel,
+        },
+        node: {
+          id: nodes.id,
+          title: nodes.title,
+        }
+      })
+      .from(cards)
+      .leftJoin(cardStates, eq(cards.id, cardStates.cardId))
+      .leftJoin(nodes, eq(cards.nodeId, nodes.id))
+      .leftJoin(playlists, eq(nodes.playlistId, playlists.id))
+      .leftJoin(subjects, eq(playlists.subjectId, subjects.id));
+
+    const whereConditions = [
+      eq(cards.userId, userId),
+    ];
+
+    if (basketId) {
+      whereConditions.push(eq(subjects.basketId, basketId));
+    }
+
+    try {
+      const results = await query.where(and(...whereConditions, isNull(cards.deletedAt)));
+      return results.filter(row => {
+        const state = row.cardState?.state;
+        const nextReview = row.cardState?.nextReview;
+        if (!row.cardState || state === 'New' || !nextReview) {
+          return true;
+        }
+        const nextReviewTime = new Date(nextReview).getTime();
+        const dueLimit = now.getTime() + 24 * 60 * 60 * 1000;
+        return nextReviewTime <= dueLimit;
+      });
+    } catch (error) {
+      if (!isMissingDeletedAtColumnError(error)) throw error;
+      const results = await query.where(and(...whereConditions));
+      return results.filter(row => {
+        const state = row.cardState?.state;
+        const nextReview = row.cardState?.nextReview;
+        if (!row.cardState || state === 'New' || !nextReview) {
+          return true;
+        }
+        const nextReviewTime = new Date(nextReview).getTime();
+        const dueLimit = now.getTime() + 24 * 60 * 60 * 1000;
+        return nextReviewTime <= dueLimit;
+      });
+    }
   }
 
   /**

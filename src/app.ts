@@ -12,6 +12,9 @@ import uploadRoutes from './routes/upload';
 import edgeRoutes from './routes/edges';
 import studyRoutes from './routes/study';
 import pulseRoutes from './routes/pulse';
+import sleepRoutes from './routes/sleep';
+import notificationRoutes from './routes/notifications';
+import statsRoutes from './routes/stats';
 import logger from './utils/logger';
 
 const app = express();
@@ -98,6 +101,9 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api', edgeRoutes);
 app.use('/api', studyRoutes);
 app.use('/api', pulseRoutes);
+app.use('/api', sleepRoutes);
+app.use('/api', notificationRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Root welcome (only for GET /)
 app.get('/', (_req: Request, res: Response) => {

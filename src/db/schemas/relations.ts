@@ -13,6 +13,9 @@ import { studySessions } from './studySessions';
 import { reviews } from './reviews';
 import { sleepLogs } from './sleepLogs';
 import { pulseQueues } from './pulseQueues';
+import { notifications } from './notifications';
+import { sleepAlerts } from './sleepAlerts';
+import { pushSubscriptions } from './pushSubscriptions';
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(userProfiles, {
@@ -21,6 +24,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   baskets: many(baskets),
   sleepLogs: many(sleepLogs),
+  notifications: many(notifications),
+  sleepAlerts: many(sleepAlerts),
+  pushSubscriptions: many(pushSubscriptions),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -168,6 +174,27 @@ export const sleepLogsRelations = relations(sleepLogs, ({ one }) => ({
 export const pulseQueuesRelations = relations(pulseQueues, ({ one }) => ({
   user: one(users, {
     fields: [pulseQueues.userId],
+    references: [users.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const sleepAlertsRelations = relations(sleepAlerts, ({ one }) => ({
+  user: one(users, {
+    fields: [sleepAlerts.userId],
+    references: [users.id],
+  }),
+}));
+
+export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [pushSubscriptions.userId],
     references: [users.id],
   }),
 }));

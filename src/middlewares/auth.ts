@@ -26,28 +26,30 @@ export function authMiddleware(
   next: NextFunction
 ): void {
   try {
-    // Extract Authorization header
+    let token = '';
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
+    if (authHeader) {
+      const parts = authHeader.split(' ');
+      if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+        res.status(401).json({
+          success: false,
+          error: 'Invalid authorization header format. Expected "Bearer <token>"',
+        });
+        return;
+      }
+      token = parts[1];
+    } else if (req.query && req.query.token) {
+      token = req.query.token as string;
+    }
+
+    if (!token) {
       res.status(401).json({
         success: false,
-        error: 'Missing authorization header',
+        error: 'Missing authorization header or token query parameter',
       });
       return;
     }
-
-    // Parse "Bearer <token>"
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
-      res.status(401).json({
-        success: false,
-        error: 'Invalid authorization header format. Expected "Bearer <token>"',
-      });
-      return;
-    }
-
-    const token = parts[1];
 
     // Verify token
     const decoded = verifyToken(token);
@@ -91,20 +93,23 @@ export function optionalAuthMiddleware(
   next: NextFunction
 ): void {
   try {
+    let token = '';
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
+    if (authHeader) {
+      const parts = authHeader.split(' ');
+      if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
+        token = parts[1];
+      }
+    } else if (req.query && req.query.token) {
+      token = req.query.token as string;
+    }
+
+    if (!token) {
       // Token not provided, continue without user
       return next();
     }
 
-    const parts = authHeader.split(' ');
-    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
-      // Malformed header, continue without user (don't fail)
-      return next();
-    }
-
-    const token = parts[1];
     const decoded = verifyToken(token);
 
     req.user = {

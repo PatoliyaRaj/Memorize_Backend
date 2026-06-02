@@ -23,3 +23,23 @@ export function toUserLocalDate(date: Date, timezone: string): string {
     return `${y}-${m}-${d}`;
   }
 }
+export function getLocalTimeParts(date: Date, timezone: string): { hour: number; minute: number } {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(date);
+    const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+    const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+    return { hour, minute };
+  } catch (e) {
+    console.warn(`[Timezone] Fallback to UTC for getLocalTimeParts with timezone "${timezone}". Error:`, e);
+    return {
+      hour: date.getUTCHours(),
+      minute: date.getUTCMinutes(),
+    };
+  }
+}
