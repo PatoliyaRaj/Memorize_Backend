@@ -72,6 +72,9 @@ export class AuthService {
       const user = await UserService.getUserByEmail(email, true);
 
       if (!user || !user.passwordHash) {
+        // Run a dummy check to consume equal CPU cycles (approx 100ms)
+        const dummyHash = '$2a$12$N9qo8uLOuGC3qiJ1D.1DFOB.Cqyq1e4J.65KKB8aY.p.xL4L.eD4q';
+        await verifyPassword(password, dummyHash);
         throw new Error('Invalid credentials');
       }
 

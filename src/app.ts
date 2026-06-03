@@ -19,8 +19,36 @@ import logger from './utils/logger';
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Configure Express trust proxy for secure client IP detection behind reverse proxies
+app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+
+// CORS Configuration (supports hybrid local/prod environments)
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or SSE initial request)
+      if (!origin) return callback(null, true);
+      
+      // In development mode, always allow localhost/127.0.0.1 for easy local testing
+      const isLocal = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+      
+      if (
+        isLocal ||
+        allowedOrigins.length === 0 ||
+        allowedOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -48,7 +76,7 @@ const globalLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV === 'production',
+  skip: () => process.env.NODE_ENV === 'test',
 });
 app.use(globalLimiter);
 

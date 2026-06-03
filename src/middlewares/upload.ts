@@ -16,7 +16,7 @@ const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterC
 export const uploadMiddleware = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max file size (increased for PDFs)
+    fileSize: 3 * 1024 * 1024, // 3MB max file size to prevent memory exhaustion
   },
   fileFilter,
 });
