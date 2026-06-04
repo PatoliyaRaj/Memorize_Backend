@@ -9,6 +9,7 @@ router.use(authMiddleware);
 
 router.post('/sleep', SleepController.logSleep);
 router.get('/sleep', SleepController.getSleepLogs);
+router.get('/sleep/profile', SleepController.getProfile);
 router.get('/sleep/window', SleepController.getCircadianStatus);
 router.post('/sleep/onboarding', SleepController.completeOnboarding);
 

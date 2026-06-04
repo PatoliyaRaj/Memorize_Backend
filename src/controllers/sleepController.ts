@@ -61,4 +61,15 @@ export class SleepController {
       res.status(400).json({ success: false, error: error.message });
     }
   }
+
+  static async getProfile(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      const profile = await SleepService.getProfile(userId);
+      res.status(200).json({ success: true, data: profile });
+    } catch (error: any) {
+      logger.error('Failed to fetch user profile', { error: error.message });
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }

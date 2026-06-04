@@ -275,4 +275,13 @@ export class SleepService {
 
     return updated[0];
   }
+
+  /**
+   * Fetches user profile settings.
+   */
+  static async getProfile(userId: string) {
+    const db = getDb();
+    const profile = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+    return profile[0] || null;
+  }
 }
