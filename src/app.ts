@@ -15,7 +15,9 @@ import pulseRoutes from './routes/pulse';
 import sleepRoutes from './routes/sleep';
 import notificationRoutes from './routes/notifications';
 import statsRoutes from './routes/stats';
+import importRoutes from './routes/import';
 import logger from './utils/logger';
+import multer from 'multer';
 
 const app = express();
 
@@ -132,6 +134,7 @@ app.use('/api', pulseRoutes);
 app.use('/api', sleepRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/import', importRoutes);
 
 // Root welcome (only for GET /)
 app.get('/', (_req: Request, res: Response) => {
@@ -149,8 +152,22 @@ app.use((req: Request, res: Response) => {
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    logger.warn('Multer error:', { code: err.code, message: err.message, path: req.path });
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        error: 'File too large',
+        message: 'File size exceeds the limit of 20MB.',
+      });
+    }
+    return res.status(400).json({
+      error: 'Upload error',
+      message: err.message,
+    });
+  }
+
   logger.error('Unhandled error:', { error: err.message, stack: err.stack, path: req.path });
-  res.status(500).json({
+  return res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });

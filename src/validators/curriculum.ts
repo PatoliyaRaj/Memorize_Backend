@@ -52,7 +52,9 @@ export const updateNodeDetailsSchema = z.object({
   references: z.array(z.object({
     title: z.string(),
     url: z.string(),
-    type: z.enum(['video', 'article', 'doc', 'book'])
+    // .catch coerces any unknown type (e.g. 'document', 'code', 'link') to 'article'
+    // This handles legacy DB data and AI-generated references gracefully
+    type: z.enum(['video', 'article', 'doc', 'book']).catch('article')
   })).optional(),
   images: z.array(z.object({
     url: z.string(),
