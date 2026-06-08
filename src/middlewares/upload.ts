@@ -15,6 +15,7 @@ import multer from 'multer';
 import path   from 'path';
 import fs     from 'fs';
 import { randomUUID } from 'crypto';
+import type { RequestHandler } from 'express'; 
 
 const UPLOAD_DIR = '/tmp/neurolearn-uploads';
 
@@ -71,14 +72,14 @@ export const fileUploadMiddleware = multer({
 export const uploadMiddleware = fileUploadMiddleware;
 
 /** Single file: 'file' field — used by single-file import flows */
-export const singleUpload = fileUploadMiddleware.single('file');
+export const singleUpload: RequestHandler= fileUploadMiddleware.single('file');
 
 /**
  * Multi-file upload:
  *   - 'file'  field → up to 1 document (PDF / docx / txt)
  *   - 'files' field → up to 5 image files (JPG/PNG/WEBP for multi-page notes)
  */
-export const multiUpload = fileUploadMiddleware.fields([
+export const multiUpload: RequestHandler = fileUploadMiddleware.fields([
   { name: 'file',  maxCount: 1 },
   { name: 'files', maxCount: 5 },
 ]);
