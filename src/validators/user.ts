@@ -1,11 +1,9 @@
 import { z } from 'zod';
 
 export const createUserSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email(),
-  age: z.number().int().min(10).max(120).optional(),
-  isActive: z.boolean().optional(),
+  email: z.string().email('Invalid email address'),
+  displayName: z.string().min(1, 'Display name is required').optional(),
+  avatarUrl: z.string().url('Invalid avatar URL').optional(),
 });
 
 export const updateUserSchema = createUserSchema.partial();

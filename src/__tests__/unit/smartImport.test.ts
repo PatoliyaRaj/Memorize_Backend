@@ -2,8 +2,8 @@ import request from 'supertest';
 
 // Mock multer before importing app
 jest.mock('multer', () => {
-  const multerMock: any = () => ({
-    single: () => (req: any, _res: any, next: any) => {
+  const multerMock: any = () => {
+    const middleware = (req: any, _res: any, next: any) => {
       if (req.headers['simulate-file-large'] === 'true') {
         const err = new (multerMock.MulterError)('File too large', 'LIMIT_FILE_SIZE');
         return next(err);
@@ -13,8 +13,12 @@ jest.mock('multer', () => {
         return next(err);
       }
       next();
-    },
-  });
+    };
+    return {
+      single: () => middleware,
+      fields: () => middleware,
+    };
+  };
   multerMock.diskStorage = jest.fn().mockReturnValue({});
   multerMock.MulterError = class extends Error {
     code: string;
@@ -156,7 +160,7 @@ describe('Smart Import Pipeline', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe('Provide a file or text content.');
+      expect(response.body.error).toBe('Provide a file or paste text content.');
     });
 
     it('should return 400 error if file uploaded exceeds Multer size limits', async () => {

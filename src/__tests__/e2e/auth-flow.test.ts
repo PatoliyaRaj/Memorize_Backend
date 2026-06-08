@@ -10,9 +10,7 @@ describe('Auth Flow E2E Tests', () => {
   const testUser = {
     email: `test+${Date.now()}@example.com`,
     password: 'SecurePass123!',
-    firstName: 'John',
-    lastName: 'Doe',
-    age: 25,
+    displayName: 'John Doe',
   };
 
   let token: string;
@@ -30,9 +28,8 @@ describe('Auth Flow E2E Tests', () => {
       expect(res.body).toHaveProperty('token');
       expect(res.body).toHaveProperty('user');
       expect(res.body.user.email).toBe(testUser.email);
-      expect(res.body.user.firstName).toBe(testUser.firstName);
-      expect(res.body.user.lastName).toBe(testUser.lastName);
-      expect(res.body.user).not.toHaveProperty('password'); // Password should not be returned
+      expect(res.body.user.displayName).toBe(testUser.displayName);
+      expect(res.body.user).not.toHaveProperty('passwordHash'); // Password should not be returned
 
       token = res.body.token;
       userId = res.body.user.id;
@@ -128,9 +125,8 @@ describe('Auth Flow E2E Tests', () => {
       const res = await request(app)
         .post('/api/auth/signup')
         .send({
-          email: 'partial@example.com',
+          // Missing email
           password: 'SecurePass123!',
-          // Missing firstName, lastName, age
         })
         .expect(400);
 
@@ -151,7 +147,7 @@ describe('Auth Flow E2E Tests', () => {
       expect(res.body).toHaveProperty('token');
       expect(res.body).toHaveProperty('user');
       expect(res.body.user.email).toBe(testUser.email);
-      expect(res.body.user).not.toHaveProperty('password');
+      expect(res.body.user).not.toHaveProperty('passwordHash');
 
       // Token should be valid
       expect(res.body.token.split('.').length).toBe(3); // JWT has 3 parts: header.payload.signature
@@ -199,7 +195,7 @@ describe('Auth Flow E2E Tests', () => {
     it('should require authentication', async () => {
       const res = await request(app)
         .patch(`/api/users/${userId}`)
-        .send({ firstName: 'Updated' })
+        .send({ displayName: 'Updated' })
         .expect(401);
 
       expect(res.body.error).toContain('authorization');
@@ -209,7 +205,7 @@ describe('Auth Flow E2E Tests', () => {
       const res = await request(app)
         .patch(`/api/users/${userId}`)
         .set('Authorization', 'InvalidBearerFormat')
-        .send({ firstName: 'Updated' })
+        .send({ displayName: 'Updated' })
         .expect(401);
 
       expect(res.body.error).toContain('authorization header format');
@@ -219,7 +215,7 @@ describe('Auth Flow E2E Tests', () => {
       const res = await request(app)
         .patch(`/api/users/${userId}`)
         .set('Authorization', 'Bearer invalid.token.here')
-        .send({ firstName: 'Updated' })
+        .send({ displayName: 'Updated' })
         .expect(401);
 
       expect(res.body.error).toContain('Invalid token');
@@ -229,21 +225,19 @@ describe('Auth Flow E2E Tests', () => {
       const res = await request(app)
         .patch(`/api/users/${userId}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ firstName: 'Jane' })
+        .send({ displayName: 'Jane' })
         .expect(200);
 
-      expect(res.body.data.firstName).toBe('Jane');
+      expect(res.body.data.displayName).toBe('Jane');
       expect(res.body.data.email).toBe(testUser.email);
     });
 
     it('should prevent cross-user updates (ownership check)', async () => {
       // Create another user
       const otherUser = {
-        email: 'other@example.com',
+        email: `other+${Date.now()}@example.com`,
         password: 'OtherPass123!',
-        firstName: 'Other',
-        lastName: 'User',
-        age: 30,
+        displayName: 'Other User',
       };
 
       const signupRes = await request(app)
@@ -257,7 +251,7 @@ describe('Auth Flow E2E Tests', () => {
       const _res = await request(app)
         .patch(`/api/users/${userId}`)
         .set('Authorization', `Bearer ${otherToken}`)
-        .send({ firstName: 'Hacker' })
+        .send({ displayName: 'Hacker' })
         .expect(403);
       expect(_res.body.error).toContain('only update your own profile');
     });
@@ -272,11 +266,9 @@ describe('Auth Flow E2E Tests', () => {
       const res = await request(app)
         .post('/api/auth/signup')
         .send({
-          email: 'delete-me@example.com',
+          email: `delete-me+${Date.now()}@example.com`,
           password: 'DeletePass123!',
-          firstName: 'Delete',
-          lastName: 'Me',
-          age: 25,
+          displayName: 'Delete Me',
         });
 
       deleteToken = res.body.token;
@@ -325,7 +317,7 @@ describe('Auth Flow E2E Tests', () => {
       expect(Array.isArray(res.body.data)).toBe(true);
       // Users should not include password hashes
       res.body.data.forEach((user: any) => {
-        expect(user).not.toHaveProperty('password');
+        expect(user).not.toHaveProperty('passwordHash');
       });
     });
   });
@@ -337,7 +329,7 @@ describe('Auth Flow E2E Tests', () => {
         .expect(200);
 
       expect(res.body.data.email).toBe(testUser.email);
-      expect(res.body.data).not.toHaveProperty('password');
+      expect(res.body.data).not.toHaveProperty('passwordHash');
     });
 
     it('should return 404 for non-existent user', async () => {
