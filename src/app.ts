@@ -25,6 +25,11 @@ const app = express();
 app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
 
 // CORS Configuration (supports hybrid local/prod environments)
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://vidyarcflow.vercel.app',
+  'https://memorizecom.vercel.app',
+];
+
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
   : [];
@@ -41,7 +46,8 @@ app.use(
       if (
         isLocal ||
         allowedOrigins.length === 0 ||
-        allowedOrigins.includes(origin)
+        allowedOrigins.includes(origin) ||
+        DEFAULT_ALLOWED_ORIGINS.includes(origin)
       ) {
         return callback(null, true);
       }
