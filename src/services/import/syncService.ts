@@ -118,7 +118,8 @@ export function syncImportedCards(
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function normalize(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+  // SECURED: Uses Unicode property escapes to preserve non-Latin scripts (Devanagari, Gujarati, etc.)
+  return s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '').trim();
 }
 
 /**
@@ -127,8 +128,8 @@ function normalize(s: string): string {
  * Uses Wagner-Fischer algorithm.
  */
 function levenshteinSimilarity(a: string, b: string): number {
-  if (a === b) return 1.0;
   if (!a.length || !b.length) return 0.0;
+  if (a === b) return 1.0;
 
   const rows = a.length + 1;
   const cols = b.length + 1;
