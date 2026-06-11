@@ -19,6 +19,18 @@ const createEdgeSchema = z.object({
   targetHandle: z.string().nullable().optional(),
 });
 
+const updateEdgeSchema = z.object({
+  edge_type: z.enum([
+    'prerequisite_of',
+    'leads_to',
+    'related_to',
+    'example_of',
+    'exception_to',
+    'part_of',
+  ]),
+  label: z.string().optional(),
+});
+
 export class EdgeController {
   static async getEdgesByPlaylist(req: Request, res: Response) {
     try {
@@ -92,6 +104,35 @@ export class EdgeController {
       logger.info('Edge deleted', { edgeId: id });
     } catch (error: any) {
       logger.error('Failed to delete edge', { error: error.message });
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  static async updateEdge(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      const { id } = req.params;
+      const parsed = updateEdgeSchema.parse(req.body);
+
+      const edge = await EdgeService.updateEdge(userId, id, {
+        edgeType: parsed.edge_type,
+        label: parsed.label,
+      });
+
+      const mapped = {
+        id: edge.id,
+        source: edge.sourceNodeId,
+        target: edge.targetNodeId,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        edge_type: edge.edgeType,
+        label: edge.label,
+      };
+
+      res.status(200).json(mapped);
+      logger.info('Edge updated', { edgeId: id });
+    } catch (error: any) {
+      logger.error('Failed to update edge', { error: error.message });
       res.status(400).json({ success: false, error: error.message });
     }
   }

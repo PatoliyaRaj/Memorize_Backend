@@ -62,4 +62,26 @@ export class EdgeService {
       
     if (!result.length) throw new Error('Edge not found or unauthorized');
   }
+
+  static async updateEdge(
+    userId: string,
+    id: string,
+    data: {
+      edgeType?: 'prerequisite_of' | 'leads_to' | 'related_to' | 'example_of' | 'exception_to' | 'part_of';
+      label?: string;
+    }
+  ) {
+    const db = getDb();
+    const result = await db
+      .update(edges)
+      .set({
+        edgeType: data.edgeType,
+        label: data.label,
+      })
+      .where(and(eq(edges.id, id), eq(edges.userId, userId)))
+      .returning();
+      
+    if (!result.length) throw new Error('Edge not found or unauthorized');
+    return result[0];
+  }
 }
