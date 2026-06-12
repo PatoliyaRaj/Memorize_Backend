@@ -99,8 +99,21 @@ describe('Smart Import Pipeline', () => {
             explanation: 'Detail info',
           },
         ],
-        metrics: {
+        meta: {
           chunkCount: 1,
+          cardsGenerated: 1,
+          cardTypes: { free_recall: 1 },
+          deduplicationRate: 0,
+          avgCardLength: 20,
+          bloomDistribution: {},
+          detectedSubject: 'GENERAL',
+          detectedAudience: 'GENERAL',
+          detectionSource: 'default',
+          inputTokens: 100,
+          outputTokens: 100,
+          estimatedCostUsd: 0.00,
+          llmProvider: 'nvidia_nim',
+          llmModel: 'nvidia/llama-3-vision',
         },
       };
       (orchestrator.orchestrateLlmAnalysis as jest.Mock).mockResolvedValue(mockLlmResult);

@@ -26,13 +26,30 @@ import {
 }                                  from '@/services/import/extractorService';
 import { orchestrateLlmAnalysis }  from '@/services/import/orchestrator';
 import { detectLanguageFromText }  from '@/services/import/languageDetector';
-import { logExtractionMetrics }    from '@/services/import/telemetry';
+import { logExtractionMetrics, logExtractionError }    from '@/services/import/telemetry';
 import { saveImport }              from '@/services/import/saveService';
 import {
   checkAndIncrementRetry,
   resetRetry,
 }                                  from '@/utils/retryTracker';
 import { z }                       from 'zod';
+
+function classifyError(err: any): 'llm_timeout' | 'ocr_failure' | 'json_parse_error' | 'validation_error' | 'unknown' {
+  const msg = err.message?.toLowerCase() || '';
+  if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('circuit breaker')) {
+    return 'llm_timeout';
+  }
+  if (msg.includes('ocr') || msg.includes('tesseract') || msg.includes('vision') || msg.includes('sharp')) {
+    return 'ocr_failure';
+  }
+  if (msg.includes('json') || msg.includes('parse') || msg.includes('unexpected token')) {
+    return 'json_parse_error';
+  }
+  if (msg.includes('zod') || msg.includes('validation') || msg.includes('invalid')) {
+    return 'validation_error';
+  }
+  return 'unknown';
+}
 
 // ── Input Sanitization ─────────────────────────────────────────────────────
 
@@ -178,6 +195,22 @@ export async function handleSmartImport(req: Request, res: Response) {
         fileSizeByte:        singleFile?.size ?? 0,
         pageCount:           extraction.pageCount ?? 1,
         chunkCount:          0,
+        
+        // Telemetry v2.0 defaults for structuredJson
+        cardsGenerated:      cards?.length || 0,
+        cardTypes:           {},
+        deduplicationRate:   0,
+        avgCardLength:       0,
+        bloomDistribution:   {},
+        detectedSubject:     'GENERAL',
+        detectedAudience:    'GENERAL',
+        detectionSource:     'default',
+        detectionConfidence: 1.0,
+        inputTokens:         0,
+        outputTokens:        0,
+        estimatedCostUsd:    0,
+        llmProvider:         'nvidia_nim',
+        llmModel:            'nvidia/llama-3-vision',
       }, extraction.text);
 
       resetRetry(userId, nodeId);
@@ -198,6 +231,7 @@ export async function handleSmartImport(req: Request, res: Response) {
       extraction.detectedLang,
       sanitizeInputForPrompt(nodeTitle || 'Concept'),
       sanitizeInputForPrompt(nodeType  || 'concept'),
+      userId, // ← PASS USERID
     );
     const orchestrationTimeMs = performance.now() - orchStart;
 
@@ -210,7 +244,23 @@ export async function handleSmartImport(req: Request, res: Response) {
       orchestrationTimeMs,
       fileSizeByte:        singleFile?.size ?? 0,
       pageCount:           extraction.pageCount ?? 1,
-      chunkCount:          result.metrics.chunkCount,
+      chunkCount:          result.meta.chunkCount,
+
+      // Telemetry v2.0 metrics from orchestrator meta
+      cardsGenerated:      result.meta.cardsGenerated,
+      cardTypes:           result.meta.cardTypes,
+      deduplicationRate:   result.meta.deduplicationRate,
+      avgCardLength:       result.meta.avgCardLength,
+      bloomDistribution:   result.meta.bloomDistribution,
+      detectedSubject:     result.meta.detectedSubject,
+      detectedAudience:    result.meta.detectedAudience,
+      detectionSource:     result.meta.detectionSource as 'db' | 'content' | 'default' | 'caller',
+      detectionConfidence: 1.0,
+      inputTokens:         result.meta.inputTokens,
+      outputTokens:        result.meta.outputTokens,
+      estimatedCostUsd:    result.meta.estimatedCostUsd,
+      llmProvider:         result.meta.llmProvider,
+      llmModel:            result.meta.llmModel,
     }, sanitizedText);
 
     // Reset retry on success — allows re-import without waiting for window
@@ -226,8 +276,15 @@ export async function handleSmartImport(req: Request, res: Response) {
     });
 
   } catch (err: any) {
+    // Log extraction error (Fix #1 & #3)
+    logExtractionError(userId, nodeId, {
+      errorType:     classifyError(err),
+      errorMessage:  err.message || 'Unknown processing error',
+      failedAtStage: allTempPaths.length > 0 ? 'extraction' : 'orchestration',
+      totalTimeMs:   performance.now() - t0,
+    }, textContent);
+
     // CWE-209: Internal error details logged server-side ONLY
-    // Client receives a generic message — no stack traces, file paths, or lib names
     console.error('[IMPORT PIPELINE ERROR]', { nodeId, userId, error: err?.message, stack: err?.stack });
     return res.status(500).json({ error: 'Failed to process document content. Please try again.' });
 

@@ -14,6 +14,9 @@ export const nodeDetails = pgTable('node_details', {
   emotionalAnchor: text('emotional_anchor'),
   isImportant: boolean('is_important').default(false).notNull(),
   examRelevance: text('exam_relevance').array().default(sql`'{}'::text[]`).notNull(),
+  detectedAudience: text('detected_audience'),
+  detectedSubject: text('detected_subject'),
+  detectionSource: text('detection_source'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

@@ -19,6 +19,9 @@ export const userProfiles = pgTable('user_profiles', {
   lastStudyDate: timestamp('last_study_date', { withTimezone: true }),
   totalCardsMastered: integer('total_cards_mastered').default(0).notNull(),
   onboardingDone: boolean('onboarding_done').default(false).notNull(),
+  academicLevel: text('academic_level'),
+  studyGoals:    text('study_goals'),
+  occupation:    text('occupation'),
   notificationPref: jsonb('notification_pref')
     .default(sql`'{"email":true,"push":true,"frequency":"smart"}'::jsonb`)
     .notNull(),

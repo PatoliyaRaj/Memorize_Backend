@@ -3,6 +3,7 @@ import { sleepLogs, userProfiles, studySessions, users } from '@/db/schemas';
 import { eq, and, desc, lt } from 'drizzle-orm';
 import { getLocalTimeParts } from '@/utils/timezone';
 import { EmailService } from './emailService';
+import { clearAudienceCache } from './import/audienceDetector';
 
 export interface SleepConsolidationScore {
   score: number;            // 0-100
@@ -232,6 +233,9 @@ export class SleepService {
       timezone: string;
       learningStyle?: 'visual' | 'auditory' | 'reading' | 'kinesthetic';
       dailyGoalMin?: number;
+      academicLevel?: string;
+      studyGoals?: string;
+      occupation?: string;
     }
   ) {
     const db = getDb();
@@ -241,6 +245,9 @@ export class SleepService {
     const timezone = data.timezone || 'UTC';
     const learningStyle = data.learningStyle || 'visual';
     const dailyGoalMin = data.dailyGoalMin || 15;
+    const academicLevel = data.academicLevel || null;
+    const studyGoals = data.studyGoals || null;
+    const occupation = data.occupation || null;
 
     await db
       .insert(userProfiles)
@@ -251,6 +258,9 @@ export class SleepService {
         timezone,
         learningStyle,
         dailyGoalMin,
+        academicLevel,
+        studyGoals,
+        occupation,
         onboardingDone: true,
         updatedAt: new Date(),
       })
@@ -262,10 +272,16 @@ export class SleepService {
           timezone,
           learningStyle,
           dailyGoalMin,
+          academicLevel,
+          studyGoals,
+          occupation,
           onboardingDone: true,
           updatedAt: new Date(),
         },
       });
+
+    // Invalidate the resolver cache (Settings Upgrade v5.0)
+    clearAudienceCache(userId);
 
     const updated = await db
       .select()
